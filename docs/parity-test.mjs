@@ -8,7 +8,7 @@
  * asserts that `sim.js` reproduces every one of them. If this test and the
  * Rust test ever disagree, one side changed the formula.
  *
- * Run: node web/parity-test.mjs
+ * Run: node docs/parity-test.mjs
  */
 
 import { createRequire } from "node:module";

@@ -1,12 +1,12 @@
 //! Parity vectors for the web simulation.
 //!
-//! The JavaScript simulation in `web/sim.js` must pick exactly the same
+//! The JavaScript simulation in `docs/sim.js` must pick exactly the same
 //! winner as the Rust template for the same epoch hash and entry count.
 //! This test is the source of truth for the expected values: it recomputes
 //! the winner index with the template's documented formula
 //! (`u64::from_le_bytes(epoch_hash.leading_bytes::<8>()) % entry_count`)
 //! over a fixed set of (epoch hash, entry count) vectors and asserts the
-//! results. `web/parity-test.mjs` asserts the same constants from the
+//! results. `docs/parity-test.mjs` asserts the same constants from the
 //! JavaScript side; if the two ever disagree, one of them changed the
 //! formula.
 //!
@@ -55,7 +55,7 @@ fn to_hex(hash: &Hash32) -> String {
 /// (name, epoch hash, entry count, expected winner index).
 /// The expected indices are pinned constants: they were produced by running
 /// this formula on the Rust side and are asserted identically by
-/// `web/parity-test.mjs`.
+/// `docs/parity-test.mjs`.
 fn vectors() -> Vec<(&'static str, Hash32, u64, u64)> {
     vec![
         // Same hash and entry counts as the engine tests in tests/draw.rs.

@@ -16,7 +16,7 @@
  *
  *   winner_index = u64_from_le_bytes(first 8 bytes of epoch hash) % entry_count
  *
- * `web/parity-test.mjs` checks this implementation against fixed vectors
+ * `docs/parity-test.mjs` checks this implementation against fixed vectors
  * whose expected values come from the Rust side (`tests/parity_vectors.rs`).
  */
 

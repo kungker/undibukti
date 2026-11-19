@@ -60,12 +60,12 @@ recomputation from the injected epoch hash, with the exact pool paid out.
 A tenth test file, `tests/parity_vectors.rs`, pins winner-index vectors that
 the web simulation is checked against.
 
-**Web MVP.** Open `web/index.html` (no build step; it also works from
+**Web MVP.** Open `docs/index.html` (no build step; it also works from
 GitHub Pages). It runs a two-minute demo — create a draw, add five entries,
 jump epochs, draw, claim — and includes a verification section: paste an
 entry list and an epoch hash, and the page recomputes the winner in your
 browser with the formula above. The simulation's rules mirror the template
-(including its rejection messages), and `node web/parity-test.mjs` verifies
+(including its rejection messages), and `node docs/parity-test.mjs` verifies
 the simulation against the Rust-pinned vectors.
 
 ## Honest limits
@@ -91,7 +91,7 @@ the simulation against the Rust-pinned vectors.
 - `src/lib.rs` — the `Draw` template.
 - `tests/draw.rs` — engine tests (full flows + rejections).
 - `tests/parity_vectors.rs` — pinned winner-index vectors from the Rust formula.
-- `web/` — the walletless web MVP (`index.html`, `sim.js`, `app.js`) and its
+- `docs/` — the walletless web MVP (`index.html`, `sim.js`, `app.js`) and its
   parity test (`parity-test.mjs`).
 
 ## License
