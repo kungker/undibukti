@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UndiBukti — Verifiable Community Draw (Tari Ootle)</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; background: #f6f7f9; color: #1c2333; line-height: 1.5;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.25rem; margin: 32px 0 8px; }
+  h3 { font-size: 1.05rem; margin: 20px 0 6px; }
+  .tagline { color: #4a5568; margin: 0 0 16px; }
+  .honest {
+    background: #fff7e6; border: 1px solid #e3b341; border-radius: 8px;
+    padding: 10px 14px; font-weight: 600;
+  }
+  section.card {
+    background: #fff; border: 1px solid #dde2ea; border-radius: 10px;
+    padding: 16px 18px; margin-top: 16px;
+  }
+  label { display: block; font-size: 0.9rem; color: #4a5568; margin-top: 8px; }
+  input, textarea, select {
+    width: 100%; padding: 8px 10px; border: 1px solid #c3cad6; border-radius: 6px;
+    font: inherit; margin-top: 4px; background: #fff;
+  }
+  textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .row > div { flex: 1 1 140px; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid #2b4acb; background: #2b4acb;
+    color: #fff; border-radius: 6px; padding: 8px 14px; margin: 8px 6px 0 0;
+  }
+  button.secondary { background: #fff; color: #2b4acb; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88rem; word-break: break-all; }
+  ol.entries { margin: 8px 0; padding-left: 28px; }
+  table { border-collapse: collapse; margin-top: 8px; }
+  th, td { border: 1px solid #dde2ea; padding: 5px 12px; text-align: left; font-size: 0.95rem; }
+  th { background: #f0f2f6; }
+  #log { list-style: none; margin: 8px 0 0; padding: 0; font-size: 0.93rem; }
+  #log li { padding: 6px 10px; border-radius: 6px; margin-top: 6px; }
+  #log li.ok { background: #e9f9ee; border: 1px solid #9fd8ae; }
+  #log li.err { background: #fdeeee; border: 1px solid #f0a3a3; }
+  .result { background: #eef3ff; border: 1px solid #b9c8f5; border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+  .match { color: #137333; font-weight: 700; }
+  .mismatch { color: #b3261e; font-weight: 700; }
+  footer { color: #4a5568; font-size: 0.9rem; margin-top: 40px; }
+  code { background: #eef0f4; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>UndiBukti</h1>
+  <p class="tagline">A verifiable community draw (raffle / giveaway) for Tari Ootle.
+  The winner is derived from a future consensus epoch hash, so the organizer cannot
+  pick the winner after entries close — and anyone can recompute the result.</p>
+
+  <p class="honest">Walletless simulation of the UndiBukti Tari template — no real funds, no live network.</p>
+
+  <section class="card">
+    <h2>Two-minute demo</h2>
+    <p>Free entry is the main demo path (a paid mode exists in the template and here).
+    Accounts are names standing in for signer public keys; on-chain, entry identity is
+    the transaction signer, so entries cannot be forged for someone else.</p>
+
+    <h3>1. Create a draw</h3>
+    <div class="row">
+      <div><label>Prize pool <input id="in-prize" type="number" value="50000" min="0"></label></div>
+      <div><label>Ticket price (0 = free) <input id="in-ticket" type="number" value="0" min="0"></label></div>
+      <div><label>Entries close at epoch <input id="in-close" type="number" value="10" min="0"></label></div>
+      <div><label>Draw at epoch <input id="in-draw" type="number" value="20" min="0"></label></div>
+    </div>
+    <button id="btn-create">Create draw (as organizer)</button>
+
+    <h3>2. Enter</h3>
+    <div id="enter-buttons"></div>
+    <div class="row">
+      <div><label>Or a custom account name <input id="in-entrant" type="text" placeholder="e.g. mallory"></label></div>
+    </div>
+    <button id="btn-enter-custom" class="secondary">Enter this account</button>
+    <button id="btn-enter-all" class="secondary">Add all 5 demo entries</button>
+    <p>Entries, in entry order (the order is part of the verifiable record):</p>
+    <ol class="entries" id="entries-list"><li><em>none yet</em></li></ol>
+
+    <h3>3. Move time forward</h3>
+    <p>Current epoch: <strong id="epoch-now">–</strong></p>
+    <button id="btn-epoch1" class="secondary">+1 epoch</button>
+    <button id="btn-epoch-close" class="secondary">Jump to close epoch</button>
+    <button id="btn-epoch-draw" class="secondary">Jump to draw epoch</button>
+
+    <h3>4. Draw</h3>
+    <button id="btn-draw">Draw</button>
+    <div class="result" id="draw-result" hidden>
+      <div>Epoch hash: <span class="mono" id="res-hash"></span></div>
+      <div>Seed (first 8 bytes, little-endian u64): <span class="mono" id="res-seed"></span></div>
+      <div>Winner index: <strong id="res-index"></strong></div>
+      <div>Winner: <strong id="res-winner"></strong></div>
+    </div>
+
+    <h3>5. Claim or refund</h3>
+    <button id="btn-claim">Claim prize</button>
+    <button id="btn-refund" class="secondary">Refund (organizer, only if zero entries)</button>
+
+    <h3>Status</h3>
+    <div id="status">No draw created yet.</div>
+    <div id="balances"></div>
+
+    <h3>Event log</h3>
+    <ul id="log"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Verify it yourself</h2>
+    <p>Do not trust this page. Paste any entry list (one account per line, in entry
+    order) and the epoch hash of the draw epoch, and the winner is recomputed here,
+    in your browser, with the template's formula:</p>
+    <p class="mono">winner_index = u64_from_le_bytes(first 8 bytes of epoch hash) mod entry_count</p>
+    <label>Entries <textarea id="ver-entries" rows="6" placeholder="alice&#10;bob&#10;carol"></textarea></label>
+    <label>Epoch hash (32 bytes, hex) <input id="ver-hash" class="mono" type="text" placeholder="64 hex characters"></label>
+    <button id="btn-verify">Recompute winner</button>
+    <button id="btn-ver-load" class="secondary">Load from the demo draw</button>
+    <div class="result" id="ver-result" hidden></div>
+  </section>
+
+  <footer>
+    <p>UndiBukti is an open-source (MIT) Tari template. The on-chain template and its
+    engine tests are the source of truth; this page simulates the same rules off-chain.
+    A parity test (<code>web/parity-test.mjs</code>) checks this simulation against
+    winner-index vectors produced by the Rust code (<code>tests/parity_vectors.rs</code>).</p>
+  </footer>
+</main>
+<script src="sim.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

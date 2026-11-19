@@ -1,0 +1,49 @@
+[package]
+name = "undibukti"
+version = "0.1.0"
+authors = ["hatch"]
+edition = "2024"
+license = "MIT"
+description = "UndiBukti — a verifiable community draw (raffle) template for Tari Ootle. The winner is derived from a future consensus epoch hash, so the organizer cannot pick the winner after entries close."
+
+
+[dependencies]
+# Pinned exactly: tari_template_test_tooling 0.54.0 itself depends on
+# tari_template_lib 0.41.0, so this pair is the newest combination that is
+# guaranteed to compile together (validated 2026-11-19).
+tari_template_lib = { version = "=0.41.0" }
+
+[dev-dependencies]
+tari_template_test_tooling = { version = "=0.54.0" }
+# Same version the tooling/engine tree already uses; needed for the
+# `Decode` bound when reading view-method return values in tests.
+tari_bor = { version = "=0.17.3" }
+
+
+
+[profile.release]
+opt-level = 's'     # Optimize for size.
+lto = true          # Enable Link Time Optimization.
+codegen-units = 1   # Reduce number of codegen units to increase optimizations.
+panic = 'abort'     # Abort on panic.
+strip = true
+
+# Wasmer and Cranelift are extremely slow when compiled in debug mode (~10x slower),
+# which makes template tests painfully slow. Optimize these specific crates even in
+# dev/test builds.
+[profile.dev.package.wasmer]
+opt-level = 2
+[profile.dev.package.wasmer-compiler]
+opt-level = 2
+[profile.dev.package.wasmer-compiler-cranelift]
+opt-level = 2
+[profile.dev.package.cranelift-codegen]
+opt-level = 2
+[profile.dev.package.cranelift-frontend]
+opt-level = 2
+[profile.dev.package.cranelift-entity]
+opt-level = 2
+
+
+[lib]
+crate-type = ["cdylib"]
